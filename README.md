@@ -36,7 +36,7 @@ Actual terminal output from this project (theory table, notes, and empirical tim
 
 ![Terminal output: python demo.py --n 5000 --repeats 5](docs/images/image%20copy.png)
 
-*After you change parameters or hardware, capture new screenshots and replace `docs/images/image.png` and `docs/images/image copy.png`, or add new files and update the links above.*
+*After you change parameters or hardware, capture new screenshots and replace `docs/images/image.png` and `docs/images/image2.png`, or add new files and update the links above.*
 
 ## What “best / average / worst” means
 
@@ -54,5 +54,5 @@ Constants and cache effects matter in practice; Big-O describes growth as **n** 
 | `theory.py` | Data for the Big-O table and notes |
 | `docs/sample_output.txt` | Example plain-text output for reports |
 | `docs/images/image.png` | Screenshot: default `python demo.py` |
-| `docs/images/image copy.png` | Screenshot: `python demo.py --n 5000 --repeats 5` |
+| `docs/images/image2.png` | Screenshot: `python demo.py --n 5000 --repeats 5` |
 | `scripts/generate_readme_images.py` | Optional: synthetic terminal-style PNGs (not used in README) |
