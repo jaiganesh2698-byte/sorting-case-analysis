@@ -1,0 +1,2 @@
+# Optional: regenerate PNG screenshots for the README (faculty / reports).
+pillow>=10.0.0

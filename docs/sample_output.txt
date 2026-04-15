@@ -1,0 +1,60 @@
+## Theoretical comparison (Big-O)
+
+Algorithm | Best | Average | Worst | Extra space
+--- | --- | --- | --- | ---
+Bubble sort | O(n) | O(n²) | O(n²) | O(1)
+Selection sort | O(n²) | O(n²) | O(n²) | O(1)
+Insertion sort | O(n) | O(n²) | O(n²) | O(1)
+Merge sort | O(n log n) | O(n log n) | O(n log n) | O(n)
+Quicksort (typical) | O(n log n) | O(n log n) | O(n²) | O(log n) avg
+Heapsort | O(n log n) | O(n log n) | O(n log n) | O(1)
+
+## Notes
+
+Bubble sort
+  Best: Single pass with swap check when already sorted (optimized variant).
+  Worst: Reverse order; many swaps per pass.
+
+Selection sort
+  Best: Still scans unsorted region every time; no adaptive best case.
+  Worst: Same as average — work is dominated by the nested structure.
+
+Insertion sort
+  Best: Each element inserts in O(1) when already sorted.
+  Worst: Reverse sorted — every insert shifts the whole prefix.
+
+Merge sort
+  Best: Always divides evenly; same recursion depth pattern.
+  Worst: No pathological input for time; cost is stable.
+
+Quicksort (typical)
+  Best: Balanced partitions (e.g. good pivot, random pivot).
+  Worst: Bad pivots every time (e.g. min/max on sorted with naive pivot).
+
+Heapsort
+  Best: Build-heap + repeated extract-max are always Θ(n log n).
+  Worst: Same — no adaptive best case for time.
+
+## Empirical timings (seconds, mean over repeats)
+
+n = 2000, repeats = 2
+
+### already sorted (often best for insertion / optimized bubble)
+  Python list.sort (Timsort): 0.01 ms
+  Bubble sort (stops early if no swaps): 0.27 ms
+  Insertion sort: 0.99 ms
+  Quicksort (Lomuto, first pivot): 194.58 ms
+
+### reverse sorted (often bad for insertion / naive quicksort)
+  Python list.sort (Timsort): 0.83 ms
+  Bubble sort (stops early if no swaps): 1007.08 ms
+  Insertion sort: 593.23 ms
+  Quicksort (Lomuto, first pivot): 497.69 ms
+
+### random order
+  Python list.sort (Timsort): 0.27 ms
+  Bubble sort (stops early if no swaps): 723.52 ms
+  Insertion sort: 229.24 ms
+  Quicksort (Lomuto, first pivot): 8.53 ms
+
+Takeaway: the same algorithm can look 'fast' or 'slow' depending on input shape; the table above explains the asymptotic story, while timings show real overhead and constants.
