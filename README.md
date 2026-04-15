@@ -1,17 +1,5 @@
 # Sorting: best, worst, and average cases
 
-**College project (faculty submission)**  
-Fill in your details below before submitting.
-
-| Field | Your information |
-|--------|------------------|
-| Student name | *(your name)* |
-| Roll / ID | *(your roll number)* |
-| Course & semester | *(e.g. Data Structures — Semester III)* |
-| Institution | *(your college name)* |
-| Submission date | *(date)* |
-
----
 
 This project summarizes **asymptotic time complexity** (best, average, and worst cases) for common comparison-based sorting algorithms, and includes a **Python program** (`demo.py`) that prints a reference table and measures run time on three input shapes: already sorted, reverse sorted, and random.
 
