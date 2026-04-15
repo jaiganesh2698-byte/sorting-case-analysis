@@ -1,4 +1,8 @@
-"""Render docs/sample_output.txt (or fresh demo output) as terminal-style PNGs for the README."""
+"""Render docs/sample_output.txt (or fresh demo output) as terminal-style PNGs for the README.
+
+Text is drawn at high resolution then downscaled (supersampling) so edges look smooth
+at normal zoom and when the faculty opens images full-screen.
+"""
 
 from __future__ import annotations
 
@@ -47,49 +51,63 @@ def _wrap_line(line: str, max_chars: int) -> list[str]:
     return parts
 
 
-def render_terminal_png(lines: list[str], out_path: Path, *, title: str) -> None:
+def render_terminal_png(
+    lines: list[str],
+    out_path: Path,
+    *,
+    title: str,
+    supersample: int = 3,
+    max_out_width: int = 1920,
+    min_out_width: int = 960,
+    base_font_px: int = 17,
+    max_chars: int = 118,
+) -> None:
     from PIL import Image, ImageDraw
 
-    bg = (30, 30, 30)
-    fg = (220, 245, 220)
-    accent = (180, 200, 255)
-    margin = 20
-    font_size = 13
-    line_gap = 4
-    max_chars = 118
+    if supersample < 1:
+        supersample = 1
+
+    bg = (24, 26, 28)
+    fg = (230, 245, 230)
+    accent = (160, 195, 255)
+    margin = int(28 * supersample)
+    font_size = int(base_font_px * supersample)
+    line_gap = int(6 * supersample)
+    cap_w = max_out_width * supersample
 
     font = _load_font(font_size)
     draw_tmp = ImageDraw.Draw(Image.new("RGB", (10, 10)))
     wrapped: list[tuple[str, bool]] = []
-    wrapped.append((f"$ python demo.py --n 2000 --repeats 2", True))
+    wrapped.append(("$ python demo.py --n 2000 --repeats 2", True))
     wrapped.append(("", False))
     for raw in lines:
         for seg in _wrap_line(raw, max_chars):
             wrapped.append((seg, False))
 
+    header_bbox = draw_tmp.textbbox((0, 0), title, font=font)
+    max_text_px = header_bbox[2] - header_bbox[0]
+
     line_heights: list[int] = []
-    max_width = 400
     for text, is_title in wrapped:
         if not text and not is_title:
             bbox = draw_tmp.textbbox((0, 0), " ", font=font)
             line_heights.append(bbox[3] - bbox[1] + line_gap)
             continue
-        fill = accent if is_title else fg
         bbox = draw_tmp.textbbox((0, 0), text or " ", font=font)
         h = bbox[3] - bbox[1] + line_gap
         line_heights.append(h)
-        w = bbox[2] - bbox[0] + 2 * margin
-        max_width = max(max_width, w)
+        max_text_px = max(max_text_px, bbox[2] - bbox[0])
 
-    width = min(1400, max_width + 2 * margin)
-    height = sum(line_heights) + 2 * margin + 28
+    min_canvas = int(min_out_width * supersample)
+    width = min(cap_w, max(min_canvas, max_text_px + 2 * margin))
+    header_h = header_bbox[3] - header_bbox[1] + int(12 * supersample)
+    height = margin + header_h + sum(line_heights) + margin
+
     img = Image.new("RGB", (width, height), bg)
     draw = ImageDraw.Draw(img)
-    header = title
-    hb = draw.textbbox((0, 0), header, font=font)
-    draw.text((margin, margin // 2), header, font=font, fill=accent)
+    draw.text((margin, margin // 2), title, font=font, fill=accent)
 
-    y = margin + (hb[3] - hb[1]) + 8
+    y = margin + header_h
     for (text, is_title), lh in zip(wrapped, line_heights):
         fill = accent if is_title else fg
         if text or is_title:
@@ -97,7 +115,13 @@ def render_terminal_png(lines: list[str], out_path: Path, *, title: str) -> None
         y += lh
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    img.save(out_path, "PNG", optimize=True)
+
+    if supersample > 1:
+        out_w = max(1, width // supersample)
+        out_h = max(1, height // supersample)
+        img = img.resize((out_w, out_h), Image.Resampling.LANCZOS)
+
+    img.save(out_path, "PNG", compress_level=3)
 
 
 def capture_demo_text(n: int, repeats: int) -> str:
@@ -116,6 +140,30 @@ def main() -> None:
     parser.add_argument("--from-demo", action="store_true", help="Run demo.py instead of sample_output.txt")
     parser.add_argument("--n", type=int, default=2000)
     parser.add_argument("--repeats", type=int, default=2)
+    parser.add_argument(
+        "--supersample",
+        type=int,
+        default=3,
+        help="Draw at N× size then downscale (default 3 = smoother text). Use 1 for a fast draft.",
+    )
+    parser.add_argument(
+        "--max-width",
+        type=int,
+        default=1920,
+        help="Maximum output width in pixels after downscaling (default 1920).",
+    )
+    parser.add_argument(
+        "--min-width",
+        type=int,
+        default=960,
+        help="Minimum output width in pixels after downscaling (default 960).",
+    )
+    parser.add_argument(
+        "--font-size",
+        type=int,
+        default=17,
+        help="Base font size in output pixels after downscaling (default 17).",
+    )
     args = parser.parse_args()
 
     if args.from_demo:
@@ -130,20 +178,30 @@ def main() -> None:
     theory_lines = lines[:empirical_idx]
     timing_lines = lines[empirical_idx:]
 
+    kw = dict(
+        supersample=args.supersample,
+        max_out_width=args.max_width,
+        min_out_width=args.min_width,
+        base_font_px=args.font_size,
+    )
+
     render_terminal_png(
         lines,
         IMAGES / "terminal-output.png",
         title="Full program output (theory + empirical timings)",
+        **kw,
     )
     render_terminal_png(
         theory_lines,
         IMAGES / "output-theory-table.png",
         title="Theoretical comparison and notes",
+        **kw,
     )
     render_terminal_png(
         timing_lines,
         IMAGES / "output-empirical-timings.png",
         title="Empirical timings (milliseconds, mean over repeats)",
+        **kw,
     )
     print(f"Wrote:\n  {IMAGES / 'terminal-output.png'}\n  {IMAGES / 'output-theory-table.png'}\n  {IMAGES / 'output-empirical-timings.png'}")
 

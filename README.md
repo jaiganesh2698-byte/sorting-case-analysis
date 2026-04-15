@@ -38,6 +38,16 @@ To refresh both the saved text capture and images from a live run:
 python scripts/generate_readme_images.py --from-demo --n 2000 --repeats 2
 ```
 
+Images are rendered with **supersampling** (draw large, then shrink with high-quality resampling) so text stays sharp in the README and in printed reports. To tweak output:
+
+```bash
+# Larger text and wider canvas (good for projectors / A4 print)
+python scripts/generate_readme_images.py --font-size 19 --max-width 2200 --min-width 1200
+
+# Even smoother edges (slower, bigger temp canvas): raise supersample to 4
+python scripts/generate_readme_images.py --supersample 4
+```
+
 ## Run
 
 ```bash
